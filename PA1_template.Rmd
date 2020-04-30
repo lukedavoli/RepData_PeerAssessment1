@@ -5,21 +5,77 @@ output:
     keep_md: true
 ---
 
-
 ## Loading and preprocessing the data
-
+```{r}
+unzip("activity.zip")
+data <- read.csv("activity.csv")
+```
 
 
 ## What is mean total number of steps taken per day?
-
-
+Calculate the steps by day
+```{r}
+data$date <- as.Date(data$date)
+stepsPerDay <- aggregate(data["steps"], by=data["date"], sum, na.rm=TRUE)
+stepsPerDay
+```
+Produce a histogram of steps by date
+```{r}
+library(ggplot2)
+ggplot(stepsPerDay, aes(x=date, y=steps)) +
+    geom_bar(stat = "identity")
+```
+Mean and median steps
+```{r}
+mean(stepsPerDay$steps)
+median(stepsPerDay$steps)
+```
 
 ## What is the average daily activity pattern?
-
-
+Time series of average steps by interval
+```{r}
+stepsPerInterval <- aggregate(data["steps"], by=data["interval"], sum, na.rm=TRUE)
+avgStepsPerInterval <- stepsPerInterval
+avgStepsPerInterval[2] <- as.numeric(as.character(stepsPerInterval$steps)) / length(unique(data$date))
+ts <- ggplot(avgStepsPerInterval, aes(x=interval, y=steps)) +
+    geom_line()
+ts
+```
+The highest amount of average steps took place during the interval 835
+```{r}
+avgStepsPerInterval[avgStepsPerInterval$steps == max(avgStepsPerInterval$steps), ] 
+```
 
 ## Imputing missing values
-
+```{r}
+sum(is.na(data$steps))
+```
+The 
+```{r}
+data[is.na(data)] <- 0
+mean(stepsPerDay$steps)
+median(stepsPerDay$steps)
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+library(lattice)
+weekdays <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
+data$wDay <- factor((weekdays(data$date) %in% weekdays),
+                    levels=c(FALSE, TRUE), labels=c('weekend', 'weekday'))
+xyplot(steps ~ interval | wDay, data = data, layout=c(1,2), type="l")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
